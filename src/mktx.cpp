@@ -70,9 +70,9 @@ bool add_input(transaction_type& tx, const std::string& parameter)
     return true;
 }
 
-script build_pubkey_hash_script(const short_hash& pubkey_hash)
+script_type build_pubkey_hash_script(const short_hash& pubkey_hash)
 {
-    script result;
+    script_type result;
     result.push_operation({opcode::dup, data_chunk()});
     result.push_operation({opcode::hash160, data_chunk()});
     result.push_operation({opcode::special,
@@ -82,9 +82,9 @@ script build_pubkey_hash_script(const short_hash& pubkey_hash)
     return result;
 }
 
-script build_script_hash_script(const short_hash& script_hash)
+script_type build_script_hash_script(const short_hash& script_hash)
 {
-    script result;
+    script_type result;
     result.push_operation({opcode::hash160, data_chunk()});
     result.push_operation({opcode::special,
         data_chunk(script_hash.begin(), script_hash.end())});
@@ -92,15 +92,15 @@ script build_script_hash_script(const short_hash& script_hash)
     return result;
 }
 
-bool build_output_script(script& out_script, const payment_address& payaddr)
+bool build_output_script(script_type& out_script, const payment_address& payaddr)
 {
-    switch (payaddr.type())
+    switch (payaddr.version())
     {
-        case payment_type::pubkey_hash:
+        case payment_address::pubkey_version:
             out_script = build_pubkey_hash_script(payaddr.hash());
             return true;
 
-        case payment_type::script_hash:
+        case payment_address::script_version:
             out_script = build_script_hash_script(payaddr.hash());
             return true;
     }
@@ -135,7 +135,7 @@ bool add_output(transaction_type& tx, const std::string& parameter)
         std::cerr << "mktx: Bad VALUE provided." << std::endl;
         return false;
     }
-    if (!build_output_script(output.output_script, addr))
+    if (!build_output_script(output.script, addr))
     {
         std::cerr << "mktx: Unsupported address type." << std::endl;
         return false;
